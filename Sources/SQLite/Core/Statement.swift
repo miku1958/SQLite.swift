@@ -32,6 +32,10 @@ import SwiftToolchainCSQLite
 import SQLite3
 #endif
 
+#if canImport(Synchronization)
+import Synchronization
+#endif
+
 /// A single SQL statement.
 public final class Statement {
 
@@ -185,7 +189,7 @@ public final class Statement {
     }
 
     public func step() throws -> Bool {
-        try connection.sync { try connection.check(sqlite3_step(handle)) == SQLITE_ROW }
+		try connection.check(sqlite3_step(handle)) == SQLITE_ROW
     }
 
     public func reset() {
@@ -327,15 +331,14 @@ struct CursorWithBindingArray: CursorProtocol {
 }
 
 public struct Cursor: CursorProtocol {
-    fileprivate let statement: Statement
-    fileprivate var handle: OpaquePointer {
-        statement.handle!
-    }
+    fileprivate weak var statement: Statement?
+    fileprivate var handle: OpaquePointer
 
     fileprivate let columnCount: Int
 
     fileprivate init(_ statement: Statement) {
         self.statement = statement
+		self.handle = statement.handle!
         columnCount = statement.columnCount
     }
 

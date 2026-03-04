@@ -84,7 +84,7 @@ extension QueryType {
     ///   - otherSetters: Any other setters to include in the inserts, per row/object.
     ///
     /// - Returns: An `INSERT` statement for the encodable objects
-    public func insertMany(_ encodables: [Encodable], userInfo: [CodingUserInfoKey: Any] = [:],
+    public func insertMany(or onConflict: OnConflict, _ encodables: [Encodable], userInfo: [CodingUserInfoKey: Any] = [:],
                            otherSetters: [Setter] = []) throws -> Insert {
         let combinedSettersWithoutNils = try encodables.map { encodable -> [Setter] in
             let encoder = SQLiteEncoder(userInfo: userInfo, forcingNilValueSetters: false)
@@ -99,9 +99,9 @@ extension QueryType {
                 try encodable.encode(to: encoder)
                 return encoder.setters + otherSetters
             }
-            return self.insertMany(combinedSymmetricSetters)
+			return self.insertMany(or: onConflict, combinedSymmetricSetters)
         }
-        return self.insertMany(combinedSettersWithoutNils)
+        return self.insertMany(or: onConflict, combinedSettersWithoutNils)
     }
 
     /// Creates an `INSERT ON CONFLICT DO UPDATE` statement, aka upsert, by encoding the given object
